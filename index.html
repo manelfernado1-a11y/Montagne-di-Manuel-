@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SUMMIT — Mountain Journal</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f4f6f3;--card:#fff;--dark:#17221d;--green:#315b45;--green-light:#dce8df;--text:#26332c;--muted:#718078;--border:#e3e8e4;--shadow:0 15px 40px rgba(28,47,37,.08);--radius:22px}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+button,input,textarea,select{font:inherit}button{cursor:pointer}
+.sidebar{position:fixed;left:0;top:0;width:250px;height:100vh;background:var(--dark);color:#fff;padding:28px 18px;display:flex;flex-direction:column;z-index:1000}
+.logo{display:flex;align-items:center;gap:12px;padding:0 10px 32px}.logo-icon{width:42px;height:42px;background:#fff;color:var(--dark);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px}.logo-text strong{display:block;font-size:17px}.logo-text span{color:#8e9b94;font-size:11px}
+.nav{display:flex;flex-direction:column;gap:6px}.nav button{border:0;background:transparent;color:#9ca9a2;padding:13px 14px;border-radius:13px;text-align:left}.nav button:hover,.nav button.active{background:#293a31;color:#fff}.nav button span{margin-right:10px}.sidebar-bottom{margin-top:auto;padding:15px;border-radius:18px;background:#213128;color:#aab6af;font-size:12px;line-height:1.5}
+.main{margin-left:250px;padding:35px;max-width:1700px}.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}.topbar h1{font-size:30px;letter-spacing:-1px;color:var(--dark)}.topbar p{color:var(--muted);margin-top:5px}.add-btn{border:0;background:var(--dark);color:#fff;padding:13px 18px;border-radius:13px;font-weight:600}.add-btn:hover{background:#294238}
+.hero{min-height:310px;border-radius:28px;padding:42px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(13,28,21,.08),rgba(13,28,21,.82)),url("https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=85") center/cover;box-shadow:var(--shadow)}.hero-content{position:relative;z-index:2;max-width:650px}.eyebrow{display:inline-flex;padding:7px 11px;background:rgba(255,255,255,.16);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15);border-radius:999px;font-size:12px;margin-bottom:13px}.hero h2{font-size:42px;line-height:1.05;letter-spacing:-1.5px;margin-bottom:12px}.hero p{color:#e3e9e5;line-height:1.6}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:22px 0}.stat{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:21px;box-shadow:0 8px 25px rgba(20,40,30,.04)}.stat-icon{font-size:20px;margin-bottom:14px}.stat-value{font-size:27px;font-weight:750;color:var(--dark)}.stat-label{color:var(--muted);font-size:12px;margin-top:4px}
+.content-grid{display:grid;grid-template-columns:1.45fr 1fr;gap:22px;margin-top:22px}.section-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:23px;box-shadow:0 8px 25px rgba(20,40,30,.04)}.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.section-title h3{font-size:18px;color:var(--dark)}.section-title span{font-size:12px;color:var(--muted)}
+#map{height:390px;width:100%;border-radius:17px;overflow:hidden}.mountain-list{display:grid;gap:13px}.mountain-card{display:flex;gap:14px;border:1px solid var(--border);border-radius:17px;padding:12px;background:#fbfcfb}.mountain-image{width:100px;height:90px;border-radius:13px;object-fit:cover;background:#dfe7e1;flex-shrink:0}.mountain-info{flex:1;min-width:0}.mountain-info h4{color:var(--dark);margin-bottom:5px}.mountain-info p{color:var(--muted);font-size:12px;margin-bottom:7px}.tag{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--green-light);color:var(--green);font-size:10px;font-weight:700}.delete-btn{border:0;background:transparent;color:#9aaaa0;font-size:15px;align-self:flex-start}.delete-btn:hover{color:#b84b4b}
+.suggestion{border-radius:17px;overflow:hidden;border:1px solid var(--border);margin-bottom:13px;background:#fff}.suggestion img{width:100%;height:145px;object-fit:cover}.suggestion-content{padding:14px}.suggestion-content h4{color:var(--dark);margin-bottom:4px}.suggestion-content p{font-size:12px;color:var(--muted);line-height:1.5}
+.modal-bg{position:fixed;inset:0;background:rgba(10,18,14,.62);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px;z-index:3000}.modal-bg.show{display:flex}.modal{background:#fff;width:min(700px,100%);max-height:92vh;overflow-y:auto;border-radius:25px;padding:28px;box-shadow:0 30px 100px rgba(0,0,0,.25)}.modal-header{display:flex;justify-content:space-between;margin-bottom:25px}.modal-header h2{color:var(--dark)}.close{border:0;background:#edf1ee;width:35px;height:35px;border-radius:50%;font-size:18px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.field{display:flex;flex-direction:column;gap:7px}.field.full{grid-column:1/-1}.field label{font-size:12px;font-weight:700;color:#46534c}.field input,.field textarea,.field select{border:1px solid var(--border);border-radius:12px;padding:12px;outline:0;background:#fafcfb;color:var(--text)}.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(49,91,69,.08)}textarea{resize:vertical;min-height:100px}.location-row{display:flex;gap:8px}.location-row input{flex:1}.gps-btn{border:0;background:var(--green-light);color:var(--green);border-radius:12px;padding:0 13px;font-weight:700}.preview{display:none;width:100%;height:180px;object-fit:cover;border-radius:14px;margin-top:8px}.submit-btn{width:100%;border:0;background:var(--dark);color:#fff;padding:14px;border-radius:13px;font-weight:700;margin-top:20px}.submit-btn:hover{background:var(--green)}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}.empty-icon{font-size:40px;margin-bottom:10px}.toast{position:fixed;bottom:25px;right:25px;background:var(--dark);color:#fff;padding:13px 18px;border-radius:13px;box-shadow:0 10px 30px rgba(0,0,0,.2);transform:translateY(100px);opacity:0;transition:.3s;z-index:5000;font-size:13px}.toast.show{transform:translateY(0);opacity:1}
+@media(max-width:1050px){.content-grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}@media(max-width:750px){.sidebar{position:static;width:100%;height:auto;padding:15px}.logo{padding-bottom:15px}.nav{flex-direction:row;overflow-x:auto}.nav button{white-space:nowrap}.sidebar-bottom{display:none}.main{margin-left:0;padding:18px}.topbar{align-items:flex-start;gap:15px;flex-direction:column}.hero{padding:28px}.hero h2{font-size:32px}.stats{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+<div class="logo"><div class="logo-icon">🏔️</div><div class="logo-text"><strong>SUMMIT</strong><span>Mountain Journal</span></div></div>
+<nav class="nav">
+<button class="active" onclick="scrollToSection('dashboard')"><span>⌂</span>Dashboard</button>
+<button onclick="scrollToSection('visited')"><span>📍</span>I miei posti</button>
+<button onclick="scrollToSection('suggestions')"><span>✦</span>Idee per te</button>
+</nav>
+<div class="sidebar-bottom"><strong>La montagna chiama.</strong><br>Ogni cima racconta una storia.</div>
+</aside>
+
+<main class="main">
+<section id="dashboard">
+<div class="topbar"><div><h1>Il mio diario ⛰️</h1><p>Raccogli i tuoi ricordi, una cima alla volta.</p></div><button class="add-btn" onclick="openModal()">+ Aggiungi montagna</button></div>
+<div class="hero"><div class="hero-content"><div class="eyebrow">✦ YOUR MOUNTAIN JOURNEY</div><h2>Ogni vetta,<br>una nuova storia.</h2><p>Tieni traccia delle montagne che hai esplorato, salva le tue foto e scopri nuovi luoghi da raggiungere.</p></div></div>
+<div class="stats">
+<div class="stat"><div class="stat-icon">🏔️</div><div class="stat-value" id="mountainCount">0</div><div class="stat-label">Montagne visitate</div></div>
+<div class="stat"><div class="stat-icon">📏</div><div class="stat-value" id="highestPeak">—</div><div class="stat-label">Vetta più alta</div></div>
+<div class="stat"><div class="stat-icon">📍</div><div class="stat-value" id="locationCount">0</div><div class="stat-label">Luoghi salvati</div></div>
+<div class="stat"><div class="stat-icon">⭐</div><div class="stat-value" id="averageRating">—</div><div class="stat-label">Valutazione media</div></div>
+</div>
+</section>
+
+<div class="content-grid">
+<section class="section-card"><div class="section-title"><h3>La mia mappa</h3><span id="mapStatus">0 luoghi</span></div><div id="map"></div></section>
+<section class="section-card" id="visited"><div class="section-title"><h3>Ultime avventure</h3><span>Il tuo diario</span></div><div id="mountainList" class="mountain-list"></div></section>
+</div>
+
+<section class="section-card" id="suggestions" style="margin-top:22px">
+<div class="section-title"><h3>Potrebbero piacerti</h3><span>Prossime avventure</span></div>
+<div class="content-grid" style="margin-top:0">
+<div class="suggestion"><img src="https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=1000&q=80" alt="Dolomiti"><div class="suggestion-content"><h4>Tre Cime di Lavaredo</h4><p>Uno dei paesaggi più iconici delle Dolomiti. Perfetto per una giornata fotografica.</p></div></div>
+<div class="suggestion"><img src="https://images.unsplash.com/photo-1486911278844-a81c5267e227?auto=format&fit=crop&w=1000&q=80" alt="Montagna"><div class="suggestion-content"><h4>Monte Rosa</h4><p>Un'esperienza alpina spettacolare tra ghiacciai e grandi panorami.</p></div></div>
+<div class="suggestion"><img src="https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1000&q=80" alt="Alpi"><div class="suggestion-content"><h4>Gran Paradiso</h4><p>Natura, vallate alpine e una delle grandi cime italiane.</p></div></div>
+</div>
+</section>
+</main>
+
+<div class="modal-bg" id="modal">
+<div class="modal">
+<div class="modal-header"><div><h2>Nuova avventura 🏔️</h2><p style="color:#718078;margin-top:5px">Aggiungi una montagna al tuo diario.</p></div><button class="close" onclick="closeModal()">×</button></div>
+<form id="mountainForm">
+<div class="form-grid">
+<div class="field"><label>Nome della montagna</label><input type="text" id="name" placeholder="Es. Monte Baldo" required></div>
+<div class="field"><label>Altezza (metri)</label><input type="number" id="height" placeholder="Es. 2218"></div>
+<div class="field"><label>Data</label><input type="date" id="date"></div>
+<div class="field"><label>Difficoltà</label><select id="difficulty"><option value="Facile">🟢 Facile</option><option value="Media">🟡 Media</option><option value="Difficile">🔴 Difficile</option></select></div>
+<div class="field full"><label>Posizione</label><div class="location-row"><input type="text" id="location" placeholder="Latitudine, Longitudine"><button type="button" class="gps-btn" onclick="getLocation()">📍 GPS</button></div><small id="gpsStatus" style="color:#718078">Puoi usare la posizione attuale del dispositivo.</small></div>
+<div class="field"><label>Valutazione</label><select id="rating"><option value="5">★★★★★</option><option value="4">★★★★☆</option><option value="3">★★★☆☆</option><option value="2">★★☆☆☆</option><option value="1">★☆☆☆☆</option></select></div>
+<div class="field"><label>Foto</label><input type="file" id="photo" accept="image/*" onchange="previewPhoto(event)"></div>
+<div class="field full"><img id="photoPreview" class="preview" alt="Anteprima"></div>
+<div class="field full"><label>La tua esperienza</label><textarea id="description" placeholder="Racconta com'è stata l'esperienza..."></textarea></div>
+</div>
+<button class="submit-btn" type="submit">Salva nel mio diario</button>
+</form>
+</div>
+</div>
+<div class="toast" id="toast">Salvato con successo ✦</div>
+
+<script>
+let mountains=JSON.parse(localStorage.getItem("summitMountains"))||[],map,markers=[],selectedImage="";
+function initMap(){map=L.map("map").setView([46.2,11.2],6);L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"&copy; OpenStreetMap contributors"}).addTo(map);renderMarkers()}
+function renderMarkers(){markers.forEach(m=>map.removeLayer(m));markers=[];mountains.forEach(m=>{if(m.lat&&m.lng){const marker=L.marker([m.lat,m.lng]).addTo(map);marker.bindPopup(`<strong>${escapeHTML(m.name)}</strong><br>${m.height?m.height+" m":""}`);markers.push(marker)}});document.getElementById("mapStatus").innerText=mountains.filter(m=>m.lat&&m.lng).length+" luoghi"}
+function getLocation(){const status=document.getElementById("gpsStatus");if(!navigator.geolocation){status.innerText="La geolocalizzazione non è supportata.";return}status.innerText="Sto cercando la tua posizione...";navigator.geolocation.getCurrentPosition(p=>{document.getElementById("location").value=`${p.coords.latitude.toFixed(6)}, ${p.coords.longitude.toFixed(6)}`;status.innerText="✓ Posizione acquisita"},()=>status.innerText="Non è stato possibile ottenere la posizione.",{enableHighAccuracy:true,timeout:10000})}
+function openModal(){document.getElementById("modal").classList.add("show")}
+function closeModal(){document.getElementById("modal").classList.remove("show")}
+function previewPhoto(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=x=>{selectedImage=x.target.result;const p=document.getElementById("photoPreview");p.src=selectedImage;p.style.display="block"};reader.readAsDataURL(file)}
+document.getElementById("mountainForm").addEventListener("submit",function(e){e.preventDefault();const location=document.getElementById("location").value.trim();let lat=null,lng=null;if(location.includes(",")){const parts=location.split(",");lat=parseFloat(parts[0]);lng=parseFloat(parts[1])}mountains.unshift({id:Date.now(),name:document.getElementById("name").value.trim(),height:Number(document.getElementById("height").value)||0,date:document.getElementById("date").value,difficulty:document.getElementById("difficulty").value,rating:Number(document.getElementById("rating").value),description:document.getElementById("description").value.trim(),location,lat,lng,image:selectedImage});localStorage.setItem("summitMountains",JSON.stringify(mountains));renderEverything();closeModal();this.reset();selectedImage="";document.getElementById("photoPreview").style.display="none";showToast("Montagna aggiunta al tuo diario ✦")});
+function renderMountains(){const c=document.getElementById("mountainList");if(!mountains.length){c.innerHTML=`<div class="empty"><div class="empty-icon">🏔️</div><strong>Nessuna avventura ancora</strong><p style="margin-top:6px">Inizia aggiungendo la tua prima montagna.</p></div>`;return}c.innerHTML=mountains.slice(0,6).map(m=>`<div class="mountain-card"><img class="mountain-image" src="${m.image||"https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=500&q=80"}" alt="${escapeHTML(m.name)}"><div class="mountain-info"><h4>${escapeHTML(m.name)}</h4><p>${m.height?m.height+" m":"Altezza non specificata"} ${m.date?" • "+formatDate(m.date):""}</p><span class="tag">${escapeHTML(m.difficulty)}</span><div style="margin-top:7px;font-size:12px">${"★".repeat(m.rating)}<span style="color:#d5dcd7">${"★".repeat(5-m.rating)}</span></div></div><button class="delete-btn" onclick="deleteMountain(${m.id})" title="Elimina">✕</button></div>`).join("")}
+function deleteMountain(id){if(!confirm("Vuoi davvero eliminare questa avventura?"))return;mountains=mountains.filter(m=>m.id!==id);localStorage.setItem("summitMountains",JSON.stringify(mountains));renderEverything();showToast("Avventura eliminata")}
+function renderStats(){document.getElementById("mountainCount").innerText=mountains.length;const highest=mountains.reduce((max,m)=>Math.max(max,m.height||0),0);document.getElementById("highestPeak").innerText=highest?highest+" m":"—";document.getElementById("locationCount").innerText=mountains.filter(m=>m.lat&&m.lng).length;document.getElementById("averageRating").innerText=mountains.length?(mountains.reduce((s,m)=>s+Number(m.rating||0),0)/mountains.length).toFixed(1):"—"}
+function renderEverything(){renderMountains();renderStats();if(map)renderMarkers()}
+function formatDate(d){return new Date(d+"T00:00:00").toLocaleDateString("it-IT",{day:"2-digit",month:"short",year:"numeric"})}
+function escapeHTML(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
+function showToast(message){const t=document.getElementById("toast");t.innerText=message;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500)}
+function scrollToSection(id){const e=document.getElementById(id);if(e)e.scrollIntoView({behavior:"smooth"})}
+document.addEventListener("DOMContentLoaded",()=>{initMap();renderEverything()});
+</script>
+</body>
+</html>
